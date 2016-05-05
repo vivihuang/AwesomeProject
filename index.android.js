@@ -5,12 +5,17 @@
 var REQUEST_URL = 'https://raw.githubusercontent.com/facebook/react-native/master/docs/MoviesExample.json'
 
 import React, { Component } from 'react'
-import { AppRegistry, Image, StyleSheet, Text, View } from 'react-native'
+import { AppRegistry, Image, StyleSheet, Text, View, ListView } from 'react-native'
 
 class AwesomeProject extends Component {
   constructor(props) {
     super(props)
-    this.state = { movies: null }
+    this.state = {
+      dataSource: new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2
+      }),
+      loaded: false
+    }
     this.fetchData = this.fetchData.bind(this)
   }
 
@@ -22,22 +27,26 @@ class AwesomeProject extends Component {
     fetch(REQUEST_URL)
       .then((response) => response.json())
       .then((responseData) => {
-        console.log(responseData)
         this.setState({
-          movies: responseData.movies
+          dataSource: this.state.dataSource.cloneWithRows(responseData.movies),
+          loaded: true
         })
-        console.log(this.state)
       })
       .done()
   }
 
   render() {
-    if (!this.state.movies) {
+    if (!this.state.loaded) {
       return renderLoadingView()
     }
 
-    var movie = this.state.movies[0]
-    return renderMovie(movie)
+    return (
+      <ListView
+        dataSource={this.state.dataSource}
+        renderRow={renderMovie}
+        style={styles.listView}
+      />
+    )
   }
 }
 
@@ -84,6 +93,10 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: 53,
     height: 81
+  },
+  listView: {
+    paddingTop: 20,
+    backgroundColor: '#F5FCFF'
   }
 })
 
